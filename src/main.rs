@@ -29,20 +29,43 @@ async fn run() -> Result<()> {
         .parse()
         .with_context(|| format!("Could not parse argument {port_str} as valid port number"))?;
 
+    info!("Creating router");
+    let router = create_router();
+
     info!("Listening for requests on port {port}");
-    serve(port).await?;
+    serve(router, port).await?;
 
     Ok(())
 }
 
-async fn serve(port: u16) -> io::Result<()> {
-    let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(&addr).await?;
-    let router = Router::new().route("/hello", get(hello));
-
-    axum::serve(listener, router).await
+fn create_router() -> Router {
+    Router::new().route("/hello", get(hello))
 }
 
 async fn hello() -> String {
     "Hello, world!".to_string()
+}
+
+async fn serve(router: Router, port: u16) -> io::Result<()> {
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(&addr).await?;
+
+    axum::serve(listener, router).await
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{create_router, hello};
+
+    #[test]
+    fn test_create_router() {
+        let router = create_router();
+        assert!(router.has_routes());
+    }
+
+    #[tokio::test]
+    async fn test_hello() {
+        let response = hello().await;
+        assert_eq!(response, "Hello, world!");
+    }
 }
