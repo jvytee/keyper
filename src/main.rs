@@ -24,11 +24,10 @@ async fn run() -> Result<()> {
         .parse(&args[1..])
         .context("Could not parse arguments")?;
 
-    let port: u16 = matches
-        .opt_str("p")
-        .unwrap_or("3000".to_string())
+    let port_str = matches.opt_str("p").unwrap_or("3000".to_string());
+    let port: u16 = port_str
         .parse()
-        .context("Could not convert port number to u16")?;
+        .with_context(|| format!("Could not parse argument {port_str} as valid port number"))?;
 
     info!("Listening for requests on port {port}");
     serve(port).await?;
