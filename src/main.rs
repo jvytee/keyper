@@ -1,21 +1,46 @@
+use anyhow::{Context, Result};
 use axum::{routing::get, Router};
-use std::io::Result;
+use getopts::Options;
+use std::{env, io};
 use tokio::net::TcpListener;
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    tracing::info!("Starting keyper...");
 
     match run().await {
         Ok(()) => tracing::info!("Done."),
-        Err(error) => tracing::error!("{}", error)
+        Err(error) => tracing::error!("Error: {}", error),
     };
 }
 
 async fn run() -> Result<()> {
+    let mut opts = Options::new();
+    opts.optopt("p", "port", "Port to listen on", "PORT");
+
+    let args: Vec<String> = env::args().collect();
+    let matches = opts
+        .parse(&args[1..])
+        .context("Could not parse arguments")?;
+
+    let port: u16 = matches
+        .opt_str("p")
+        .unwrap_or("3000".to_string())
+        .parse()
+        .context("Could not convert port number to u16")?;
+
+    info!("Listening for requests on port {port}");
+    serve(port).await?;
+
+    Ok(())
+}
+
+async fn serve(port: u16) -> io::Result<()> {
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(&addr).await?;
     let router = Router::new().route("/hello", get(hello));
-    let listener = TcpListener::bind("0.0.0.0:3000").await?;
+
     axum::serve(listener, router).await
 }
 

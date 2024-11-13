@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
 axum = "0.7"
 getopts = "0.2"
 tracing = "0.1"
