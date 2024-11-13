@@ -39,11 +39,22 @@ async fn run() -> Result<()> {
 }
 
 fn create_router() -> Router {
-    Router::new().route("/hello", get(hello))
+    Router::new()
+        .route("/", get(index))
+        .route("/auth", get(auth))
+        .route("/token", get(token))
 }
 
-async fn hello() -> String {
+async fn index() -> String {
     "Hello, world!".to_string()
+}
+
+async fn auth() -> String {
+    "Authorization endpoint".to_string()
+}
+
+async fn token() -> String {
+    "Token endpoint".to_string()
 }
 
 async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -55,7 +66,7 @@ async fn serve(router: Router, port: u16) -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{create_router, hello};
+    use crate::{create_router, index, auth, token};
 
     #[test]
     fn test_create_router() {
@@ -64,8 +75,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_hello() {
-        let response = hello().await;
+    async fn test_index() {
+        let response = index().await;
         assert_eq!(response, "Hello, world!");
+    }
+
+    #[tokio::test]
+    async fn test_auth() {
+        let response = auth().await;
+        assert_eq!(response, "Authorization endpoint");
+    }
+
+    #[tokio::test]
+    async fn test_token() {
+        let response = token().await;
+        assert_eq!(response, "Token endpoint");
     }
 }
