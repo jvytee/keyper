@@ -291,6 +291,7 @@ dependencies = [
  "anyhow",
  "axum",
  "getopts",
+ "serde",
  "tokio",
  "tracing",
  "tracing-subscriber",
