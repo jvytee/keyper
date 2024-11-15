@@ -9,7 +9,7 @@ pub struct AccessTokenRequest {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
-#[serde(untagged)]
+#[serde(untagged, rename_all = "snake_case")]
 pub enum GrantType {
     AuthorizationCode,
 }
@@ -24,7 +24,7 @@ pub struct AccessTokenResponse {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
-#[serde(untagged)]
+#[serde(untagged, rename_all = "snake_case")]
 pub enum TokenType {
     Bearer,
 }
