@@ -2,22 +2,16 @@ use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::ge
 use std::io;
 use tokio::net::TcpListener;
 
-use crate::{
-    authorization::{
-        self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
-    },
-    token,
+use crate::authorization::{
+    self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
 };
+use crate::token;
 
 pub fn create_router() -> Router {
     Router::new()
         .route("/", get(index))
         .route("/authorization", get(authorization_endpoint))
         .route("/token", get(token::handler))
-}
-
-async fn index() -> String {
-    "Hello, world!".to_string()
 }
 
 pub async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -27,7 +21,11 @@ pub async fn serve(router: Router, port: u16) -> io::Result<()> {
     axum::serve(listener, router).await
 }
 
-pub async fn authorization_endpoint(
+async fn index() -> String {
+    "Hello, world!".to_string()
+}
+
+async fn authorization_endpoint(
     Query(auth_request): Query<AuthorizationRequest>,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
     authorization::authorization_code(auth_request).await
@@ -41,7 +39,19 @@ impl IntoResponse for AuthorizationResponse {
 
 impl IntoResponse for AuthorizationErrorResponse {
     fn into_response(self) -> axum::response::Response {
-        (StatusCode::UNAUTHORIZED, Json(self)).into_response()
+        let status_code = match self.error {
+            authorization::AuthorizationError::InvalidRequest => StatusCode::BAD_REQUEST,
+            authorization::AuthorizationError::UnauthorizedClient => StatusCode::UNAUTHORIZED,
+            authorization::AuthorizationError::AccessDenied => StatusCode::FORBIDDEN,
+            authorization::AuthorizationError::UnsupportedResponseType => StatusCode::BAD_REQUEST,
+            authorization::AuthorizationError::InvalidScope => StatusCode::BAD_REQUEST,
+            authorization::AuthorizationError::ServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            authorization::AuthorizationError::TemporarilyUnavailable => {
+                StatusCode::SERVICE_UNAVAILABLE
+            }
+        };
+
+        (status_code, Json(self)).into_response()
     }
 }
 
