@@ -1,5 +1,4 @@
-use axum::{extract::Query, response::IntoResponse};
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -10,26 +9,20 @@ pub struct AuthorizationRequest {
     pub state: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(untagged)]
-enum ResponseType {
+pub enum ResponseType {
     Code,
     Token,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct AuthorizationResponse {
     pub code: String,
     pub state: Option<String>,
 }
 
-impl IntoResponse for AuthorizationResponse {
-    fn into_response(self) -> axum::response::Response {
-        todo!()
-    }
-}
-
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct AuthorizationErrorResponse {
     pub error: AuthorizationError,
     pub error_description: Option<String>,
@@ -37,14 +30,9 @@ pub struct AuthorizationErrorResponse {
     pub state: Option<String>,
 }
 
-impl IntoResponse for AuthorizationErrorResponse {
-    fn into_response(self) -> axum::response::Response {
-        todo!()
-    }
-}
-
-#[derive(Debug)]
-enum AuthorizationError {
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+pub enum AuthorizationError {
     InvalidRequest,
     AccessDenied,
     UnsupportedResponseType,
@@ -53,9 +41,18 @@ enum AuthorizationError {
     TemporarilyUnavailable,
 }
 
-pub async fn handler(
-    Query(auth_request): Query<AuthorizationRequest>,
-) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
+pub async fn authorization_code(auth_request: AuthorizationRequest) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
+    if auth_request.response_type != ResponseType::Code {
+        let auth_err_response = AuthorizationErrorResponse {
+            error: AuthorizationError::UnsupportedResponseType,
+            error_description: None,
+            error_uri: None,
+            state: auth_request.state
+        };
+
+        return Err(auth_err_response);
+    }
+
     let auth_response = AuthorizationResponse {
         code: "foobar".to_string(),
         state: auth_request.state,
@@ -66,12 +63,10 @@ pub async fn handler(
 
 #[cfg(test)]
 mod tests {
-    use axum::extract::Query;
-
-    use crate::authorization::{handler, AuthorizationRequest, ResponseType};
+    use crate::authorization::{authorization_code, AuthorizationRequest, ResponseType};
 
     #[tokio::test]
-    async fn test_handler() {
+    async fn test_authorization_code_success() {
         let request = AuthorizationRequest {
             response_type: ResponseType::Code,
             client_id: "s6BhdRkqt3".to_string(),
@@ -79,7 +74,11 @@ mod tests {
             redirect_uri: Some("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()),
             scope: None,
         };
-        let response = handler(Query(request.clone())).await.unwrap();
+
+        let response = authorization_code(request.clone())
+            .await
+            .unwrap();
+
         assert_eq!(response.state, request.state);
     }
 }
