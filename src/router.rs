@@ -5,13 +5,13 @@ use tokio::net::TcpListener;
 use crate::authorization::{
     self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
 };
-use crate::token;
+use crate::token::{self, AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 
 pub fn create_router() -> Router {
     Router::new()
         .route("/", get(index))
         .route("/authorization", get(authorization_endpoint))
-        .route("/token", get(token::handler))
+        .route("/token", get(token_endpoint))
 }
 
 pub async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -55,6 +55,24 @@ impl IntoResponse for AuthorizationErrorResponse {
     }
 }
 
+async fn token_endpoint(
+    Query(access_token_request): Query<AccessTokenRequest>,
+) -> Result<AccessTokenResponse, AccessTokenErrorResponse> {
+    todo!()
+}
+
+impl IntoResponse for AccessTokenResponse {
+    fn into_response(self) -> axum::response::Response {
+        todo!()
+    }
+}
+
+impl IntoResponse for AccessTokenErrorResponse {
+    fn into_response(self) -> axum::response::Response {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use axum::extract::Query;
@@ -77,7 +95,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_handler() {
+    async fn test_authorization_endpoint() {
         let request = AuthorizationRequest {
             response_type: ResponseType::Code,
             client_id: "s6BhdRkqt3".to_string(),
