@@ -8,17 +8,23 @@ mod user;
 use anyhow::Result;
 use client::TestClientFactory;
 use router::RouterState;
-use std::env;
+use std::{env, process::ExitCode};
 use tracing::info;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> ExitCode {
     tracing_subscriber::fmt::init();
 
     match run().await {
-        Ok(()) => tracing::info!("Done."),
-        Err(error) => tracing::error!("Error: {}", error),
-    };
+        Ok(()) => {
+            tracing::info!("Done.");
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            tracing::error!("Error: {}", error);
+            ExitCode::FAILURE
+        }
+    }
 }
 
 async fn run() -> Result<()> {
@@ -27,7 +33,9 @@ async fn run() -> Result<()> {
     let params = cli::parse_args(&args)?;
 
     info!("Creating client factory");
-    let client_factory = TestClientFactory { client_ids: vec!["foobar".to_string()] };
+    let client_factory = TestClientFactory {
+        client_ids: vec!["foobar".to_string()],
+    };
 
     info!("Creating router");
     let router_state = RouterState { client_factory };
