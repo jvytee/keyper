@@ -1,11 +1,13 @@
 use axum::extract::State;
+use axum::http::HeaderMap;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use std::io;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use crate::authorization::{
-    self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
+    self, AuthorizationError, AuthorizationErrorResponse, AuthorizationRequest,
+    AuthorizationResponse,
 };
 use crate::client::TestClientFactory;
 use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
@@ -36,7 +38,17 @@ async fn index() -> String {
 async fn authorization_endpoint(
     State(router_state): State<Arc<RouterState>>,
     Query(auth_request): Query<AuthorizationRequest>,
+    headers: HeaderMap,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
+    if !headers.contains_key("Authorization") {
+        return Err(AuthorizationErrorResponse {
+            error: AuthorizationError::AccessDenied,
+            error_description: None,
+            error_uri: None,
+            state: auth_request.state,
+        });
+    }
+
     authorization::authorization_code(auth_request, &router_state.client_factory).await
 }
 
@@ -86,7 +98,7 @@ impl IntoResponse for AccessTokenErrorResponse {
 mod tests {
     use std::sync::Arc;
 
-    use axum::extract::{Query, State};
+    use axum::{extract::{Query, State}, http::{HeaderMap, HeaderValue}};
 
     use crate::{
         authorization::{AuthorizationRequest, ResponseType},
@@ -124,9 +136,12 @@ mod tests {
             client_ids: vec!["foobar".to_string()],
         };
         let router_state = RouterState { client_factory };
+        
+        let mut headers = HeaderMap::new();
+        headers.insert("Authorization", "foobarbaz".parse().unwrap() );
 
         let response =
-            authorization_endpoint(State(Arc::new(router_state)), Query(request.clone()))
+            authorization_endpoint(State(Arc::new(router_state)), Query(request.clone()), headers)
                 .await
                 .unwrap();
 

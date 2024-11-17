@@ -13,7 +13,7 @@ pub struct AuthorizationRequest {
 }
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
-#[serde(untagged, rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum ResponseType {
     Code,
     Token,
@@ -34,7 +34,7 @@ pub struct AuthorizationErrorResponse {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
-#[serde(untagged, rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum AuthorizationError {
     InvalidRequest,
     UnauthorizedClient,

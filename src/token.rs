@@ -9,7 +9,7 @@ pub struct AccessTokenRequest {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
-#[serde(untagged, rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum GrantType {
     AuthorizationCode,
 }
@@ -24,7 +24,7 @@ pub struct AccessTokenResponse {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
-#[serde(untagged, rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum TokenType {
     Bearer,
 }
@@ -37,7 +37,7 @@ pub struct AccessTokenErrorResponse {
 }
 
 #[derive(Serialize, Debug)]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case")]
 pub enum AccessTokenError {
     InvalidRequest,
     InvalidClient,
