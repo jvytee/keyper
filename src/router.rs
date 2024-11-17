@@ -1,17 +1,22 @@
+use axum::extract::State;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use std::io;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use crate::authorization::{
     self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
 };
-use crate::token::{self, AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
+use crate::client::TestClientFactory;
+use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 
-pub fn create_router() -> Router {
+pub fn create_router(client_factory: TestClientFactory) -> Router {
+    let state = Arc::new(client_factory);
     Router::new()
         .route("/", get(index))
         .route("/authorization", get(authorization_endpoint))
         .route("/token", get(token_endpoint))
+        .with_state(state)
 }
 
 pub async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -26,9 +31,10 @@ async fn index() -> String {
 }
 
 async fn authorization_endpoint(
+    State(client_factory): State<Arc<TestClientFactory>>,
     Query(auth_request): Query<AuthorizationRequest>,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
-    authorization::authorization_code(auth_request).await
+    authorization::authorization_code(auth_request, client_factory.as_ref()).await
 }
 
 impl IntoResponse for AuthorizationResponse {
@@ -75,16 +81,22 @@ impl IntoResponse for AccessTokenErrorResponse {
 
 #[cfg(test)]
 mod tests {
-    use axum::extract::Query;
+    use std::sync::Arc;
+
+    use axum::extract::{Query, State};
 
     use crate::{
         authorization::{AuthorizationRequest, ResponseType},
+        client::TestClientFactory,
         router::{authorization_endpoint, create_router, index},
     };
 
     #[test]
     fn test_create_router() {
-        let router = create_router();
+        let client_factory = TestClientFactory {
+            client_ids: vec!["foobar".to_string()],
+        };
+        let router = create_router(client_factory);
         assert!(router.has_routes());
     }
 
@@ -98,13 +110,17 @@ mod tests {
     async fn test_authorization_endpoint() {
         let request = AuthorizationRequest {
             response_type: ResponseType::Code,
-            client_id: "s6BhdRkqt3".to_string(),
+            client_id: "foobar".to_string(),
             state: Some("xyz".to_string()),
             redirect_uri: Some("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()),
             scope: None,
         };
 
-        let response = authorization_endpoint(Query(request.clone()))
+        let client_factory = TestClientFactory {
+            client_ids: vec!["foobar".to_string()],
+        };
+
+        let response = authorization_endpoint(State(Arc::new(client_factory)), Query(request.clone()))
             .await
             .unwrap();
 
