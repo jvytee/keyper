@@ -44,7 +44,7 @@ async fn authorization_endpoint(
     if !headers.contains_key("Authorization") {
         return (
             StatusCode::UNAUTHORIZED,
-            [(header::WWW_AUTHENTICATE, "Basic, realm=\"Authorization\"")],
+            [(header::WWW_AUTHENTICATE, "Basic realm=\"Authorization\"")],
             (),
         )
             .into_response();
