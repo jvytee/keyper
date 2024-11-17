@@ -7,6 +7,7 @@ mod user;
 
 use anyhow::Result;
 use client::TestClientFactory;
+use router::RouterState;
 use std::env;
 use tracing::info;
 
@@ -29,7 +30,8 @@ async fn run() -> Result<()> {
     let client_factory = TestClientFactory { client_ids: vec!["foobar".to_string()] };
 
     info!("Creating router");
-    let router = router::create_router(client_factory);
+    let router_state = RouterState { client_factory };
+    let router = router::create_router(router_state);
 
     info!("Listening for requests on port {}", params.port);
     router::serve(router, params.port).await?;

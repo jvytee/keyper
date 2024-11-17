@@ -10,13 +10,16 @@ use crate::authorization::{
 use crate::client::TestClientFactory;
 use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 
-pub fn create_router(client_factory: TestClientFactory) -> Router {
-    let state = Arc::new(client_factory);
+pub struct RouterState {
+    pub client_factory: TestClientFactory,
+}
+
+pub fn create_router(state: RouterState) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/authorization", get(authorization_endpoint))
         .route("/token", get(token_endpoint))
-        .with_state(state)
+        .with_state(Arc::new(state))
 }
 
 pub async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -31,10 +34,10 @@ async fn index() -> String {
 }
 
 async fn authorization_endpoint(
-    State(client_factory): State<Arc<TestClientFactory>>,
+    State(router_state): State<Arc<RouterState>>,
     Query(auth_request): Query<AuthorizationRequest>,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
-    authorization::authorization_code(auth_request, client_factory.as_ref()).await
+    authorization::authorization_code(auth_request, &router_state.client_factory).await
 }
 
 impl IntoResponse for AuthorizationResponse {
@@ -88,7 +91,7 @@ mod tests {
     use crate::{
         authorization::{AuthorizationRequest, ResponseType},
         client::TestClientFactory,
-        router::{authorization_endpoint, create_router, index},
+        router::{authorization_endpoint, create_router, index, RouterState},
     };
 
     #[test]
@@ -96,7 +99,8 @@ mod tests {
         let client_factory = TestClientFactory {
             client_ids: vec!["foobar".to_string()],
         };
-        let router = create_router(client_factory);
+        let router_state = RouterState { client_factory };
+        let router = create_router(router_state);
         assert!(router.has_routes());
     }
 
@@ -119,10 +123,12 @@ mod tests {
         let client_factory = TestClientFactory {
             client_ids: vec!["foobar".to_string()],
         };
+        let router_state = RouterState { client_factory };
 
-        let response = authorization_endpoint(State(Arc::new(client_factory)), Query(request.clone()))
-            .await
-            .unwrap();
+        let response =
+            authorization_endpoint(State(Arc::new(router_state)), Query(request.clone()))
+                .await
+                .unwrap();
 
         assert_eq!(response.state, request.state);
     }

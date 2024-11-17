@@ -6,6 +6,7 @@ pub struct Client {
     pub id: String,
 }
 
+#[derive(Clone)]
 pub struct TestClientFactory {
     pub client_ids: Vec<String>,
 }
