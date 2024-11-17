@@ -12,6 +12,7 @@ use crate::authorization::{
 use crate::client::TestClientFactory;
 use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 
+#[derive(Debug)]
 pub struct RouterState {
     pub client_factory: TestClientFactory,
 }
