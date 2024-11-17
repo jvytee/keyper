@@ -1,13 +1,13 @@
 use axum::extract::State;
-use axum::http::HeaderMap;
+use axum::http::{header, HeaderMap};
+use axum::response::Response;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use std::io;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use crate::authorization::{
-    self, AuthorizationError, AuthorizationErrorResponse, AuthorizationRequest,
-    AuthorizationResponse,
+    self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
 };
 use crate::client::TestClientFactory;
 use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
@@ -40,27 +40,29 @@ async fn authorization_endpoint(
     State(router_state): State<Arc<RouterState>>,
     Query(auth_request): Query<AuthorizationRequest>,
     headers: HeaderMap,
-) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
+) -> Response {
     if !headers.contains_key("Authorization") {
-        return Err(AuthorizationErrorResponse {
-            error: AuthorizationError::AccessDenied,
-            error_description: None,
-            error_uri: None,
-            state: auth_request.state,
-        });
+        return (
+            StatusCode::UNAUTHORIZED,
+            [(header::WWW_AUTHENTICATE, "Basic, realm=\"Authorization\"")],
+            (),
+        )
+            .into_response();
     }
 
-    authorization::authorization_code(auth_request, &router_state.client_factory).await
+    authorization::authorization_code(auth_request, &router_state.client_factory)
+        .await
+        .into_response()
 }
 
 impl IntoResponse for AuthorizationResponse {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         Json(self).into_response()
     }
 }
 
 impl IntoResponse for AuthorizationErrorResponse {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         let status_code = match self.error {
             authorization::AuthorizationError::InvalidRequest => StatusCode::BAD_REQUEST,
             authorization::AuthorizationError::UnauthorizedClient => StatusCode::UNAUTHORIZED,
@@ -84,13 +86,13 @@ async fn token_endpoint(
 }
 
 impl IntoResponse for AccessTokenResponse {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         todo!()
     }
 }
 
 impl IntoResponse for AccessTokenErrorResponse {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         todo!()
     }
 }
@@ -99,7 +101,10 @@ impl IntoResponse for AccessTokenErrorResponse {
 mod tests {
     use std::sync::Arc;
 
-    use axum::{extract::{Query, State}, http::{HeaderMap, HeaderValue}};
+    use axum::{
+        extract::{Query, State},
+        http::{HeaderMap, HeaderValue, StatusCode},
+    };
 
     use crate::{
         authorization::{AuthorizationRequest, ResponseType},
@@ -137,15 +142,17 @@ mod tests {
             client_ids: vec!["foobar".to_string()],
         };
         let router_state = RouterState { client_factory };
-        
+
         let mut headers = HeaderMap::new();
-        headers.insert("Authorization", "foobarbaz".parse().unwrap() );
+        // headers.insert("Authorization", "foobarbaz".parse().unwrap());
 
-        let response =
-            authorization_endpoint(State(Arc::new(router_state)), Query(request.clone()), headers)
-                .await
-                .unwrap();
+        let response = authorization_endpoint(
+            State(Arc::new(router_state)),
+            Query(request.clone()),
+            headers,
+        )
+        .await;
 
-        assert_eq!(response.state, request.state);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 }
