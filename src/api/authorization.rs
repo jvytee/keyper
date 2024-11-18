@@ -7,7 +7,7 @@ use axum::{
     Json,
 };
 
-use crate::authorization::{
+use crate::core::authorization::{
     self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
 };
 
@@ -66,8 +66,8 @@ mod tests {
 
     use crate::{
         api::{authorization::authorization_endpoint, RouterState},
-        authorization::{AuthorizationRequest, ResponseType},
-        client::TestClientFactory,
+        core::authorization::{AuthorizationRequest, ResponseType},
+        data::client::TestClientFactory,
     };
 
     #[tokio::test]

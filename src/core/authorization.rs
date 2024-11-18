@@ -1,7 +1,7 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::client::ClientFactory;
+use crate::data::client::ClientFactory;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -90,10 +90,10 @@ fn generate_authorization_code() -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        authorization::{
+        data::client::{Client, ClientFactory},
+        core::authorization::{
             authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
         },
-        client::{Client, ClientFactory},
     };
 
     struct TestClientFactory {
@@ -101,7 +101,7 @@ mod tests {
     }
 
     impl ClientFactory for TestClientFactory {
-        fn from_id(&self, id: &str) -> Option<crate::client::Client> {
+        fn from_id(&self, id: &str) -> Option<Client> {
             if self.client_ids.contains(&id.to_string()) {
                 Some(Client { id: id.to_string() })
             } else {
@@ -146,7 +146,9 @@ mod tests {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_factory).await.unwrap_err();
+        let response = authorization_code(request.clone(), &client_factory)
+            .await
+            .unwrap_err();
 
         assert_eq!(response.state, request.state);
         assert_eq!(response.error, AuthorizationError::UnsupportedResponseType);

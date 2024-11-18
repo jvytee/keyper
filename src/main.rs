@@ -1,12 +1,10 @@
-mod authorization;
-mod cli;
-mod client;
 mod api;
-mod token;
-mod user;
+mod cli;
+mod core;
+mod data;
 
 use anyhow::Result;
-use client::TestClientFactory;
+use data::client::TestClientFactory;
 use api::RouterState;
 use std::{env, process::ExitCode};
 use tracing::info;

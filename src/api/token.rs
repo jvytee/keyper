@@ -4,14 +4,14 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
+use crate::core::token::{access_token, AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 use super::RouterState;
 
-fn token_endpoint(
+pub async fn token_endpoint(
     State(router_state): State<Arc<RouterState>>,
     Query(access_token_request): Query<AccessTokenRequest>,
 ) -> Result<AccessTokenResponse, AccessTokenErrorResponse> {
-    todo!()
+    access_token(access_token_request).await
 }
 
 impl IntoResponse for AccessTokenResponse {

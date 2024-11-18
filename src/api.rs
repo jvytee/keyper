@@ -2,12 +2,13 @@ pub mod authorization;
 pub mod token;
 
 use authorization::authorization_endpoint;
+use token::token_endpoint;
 use axum::{routing::get, Router};
 use std::io;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
-use crate::client::TestClientFactory;
+use crate::data::client::TestClientFactory;
 
 #[derive(Debug)]
 pub struct RouterState {
@@ -18,7 +19,7 @@ pub fn create_router(state: RouterState) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/authorization", get(authorization_endpoint))
-        // .route("/token", get(token_endpoint))
+        .route("/token", get(token_endpoint))
         .with_state(Arc::new(state))
 }
 
@@ -37,7 +38,7 @@ async fn index() -> String {
 mod tests {
     use crate::{
         api::{create_router, index, RouterState},
-        client::TestClientFactory,
+        data::client::TestClientFactory,
     };
 
     #[test]

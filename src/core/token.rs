@@ -47,12 +47,14 @@ pub enum AccessTokenError {
     InvalidScope,
 }
 
-pub async fn access_token(access_token_request: AccessTokenRequest) -> Result<AccessTokenResponse, AccessTokenErrorResponse> {
+pub async fn access_token(
+    access_token_request: AccessTokenRequest,
+) -> Result<AccessTokenResponse, AccessTokenErrorResponse> {
     if access_token_request.grant_type != GrantType::AuthorizationCode {
         let access_token_error_response = AccessTokenErrorResponse {
             error: AccessTokenError::UnsupportedGrantType,
             error_descripton: None,
-            error_uri: None
+            error_uri: None,
         };
 
         return Err(access_token_error_response);
@@ -63,7 +65,7 @@ pub async fn access_token(access_token_request: AccessTokenRequest) -> Result<Ac
         token_type: TokenType::Bearer,
         expires_in: 3600,
         refresh_token: None,
-        scope: None
+        scope: None,
     };
 
     Ok(access_token_reponse)
@@ -71,7 +73,7 @@ pub async fn access_token(access_token_request: AccessTokenRequest) -> Result<Ac
 
 #[cfg(test)]
 mod tests {
-    use crate::token::{access_token, AccessTokenRequest, GrantType, TokenType};
+    use crate::core::token::{access_token, AccessTokenRequest, GrantType, TokenType};
 
     #[tokio::test]
     async fn test_access_token() {
