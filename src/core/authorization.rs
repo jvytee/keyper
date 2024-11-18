@@ -1,7 +1,7 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::data::client::ClientFactory;
+use crate::core::data::ClientFactory;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -89,11 +89,11 @@ fn generate_authorization_code() -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        data::client::{Client, ClientFactory},
-        core::authorization::{
+    use crate::core::{
+        authorization::{
             authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
         },
+        data::{Client, ClientFactory},
     };
 
     struct TestClientFactory {

@@ -1,10 +1,4 @@
-pub trait ClientFactory {
-    fn from_id(&self, id: &str) -> Option<Client>;
-}
-
-pub struct Client {
-    pub id: String,
-}
+use crate::core::data::{Client, ClientFactory};
 
 #[derive(Clone, Debug)]
 pub struct TestClientFactory {
