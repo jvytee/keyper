@@ -1,13 +1,13 @@
 mod authorization;
 mod cli;
 mod client;
-mod router;
+mod api;
 mod token;
 mod user;
 
 use anyhow::Result;
 use client::TestClientFactory;
-use router::RouterState;
+use api::RouterState;
 use std::{env, process::ExitCode};
 use tracing::info;
 
@@ -39,10 +39,10 @@ async fn run() -> Result<()> {
 
     info!("Creating router");
     let router_state = RouterState { client_factory };
-    let router = router::create_router(router_state);
+    let router = api::create_router(router_state);
 
     info!("Listening for requests on port {}", params.port);
-    router::serve(router, params.port).await?;
+    api::serve(router, params.port).await?;
 
     Ok(())
 }
