@@ -29,6 +29,11 @@ async fn run() -> Result<()> {
     info!("Parsing command line arguments");
     let args: Vec<String> = env::args().collect();
     let params = cli::parse_args(&args)?;
+    
+    if let Some(help) = params.help {
+        println!("{help}");
+        return Ok(());
+    }
 
     info!("Creating client factory");
     let client_factory = TestClientFactory {
