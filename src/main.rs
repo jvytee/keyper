@@ -4,7 +4,7 @@ mod core;
 mod data;
 
 use anyhow::Result;
-use data::client::TestClientFactory;
+use data::client::TestClientSource;
 use api::RouterState;
 use std::{env, process::ExitCode};
 use tracing::info;
@@ -36,12 +36,12 @@ async fn run() -> Result<()> {
     }
 
     info!("Creating client factory");
-    let client_factory = TestClientFactory {
+    let client_factory = TestClientSource {
         client_ids: vec!["foobar".to_string()],
     };
 
     info!("Creating router");
-    let router_state = RouterState { client_factory };
+    let router_state = RouterState { client_source: client_factory };
     let router = api::create_router(router_state);
 
     info!("Listening for requests on port {}", params.port);

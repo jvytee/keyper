@@ -27,7 +27,7 @@ pub async fn authorization_endpoint(
             .into_response();
     }
 
-    authorization::authorization_code(auth_request, &router_state.client_factory)
+    authorization::authorization_code(auth_request, &router_state.client_source)
         .await
         .into_response()
 }
@@ -67,7 +67,7 @@ mod tests {
     use crate::{
         api::{authorization::authorization_endpoint, RouterState},
         core::authorization::{AuthorizationRequest, ResponseType},
-        data::client::TestClientFactory,
+        data::client::TestClientSource,
     };
 
     #[tokio::test]
@@ -80,10 +80,10 @@ mod tests {
             scope: None,
         };
 
-        let client_factory = TestClientFactory {
+        let client_source = TestClientSource {
             client_ids: vec!["foobar".to_string()],
         };
-        let router_state = RouterState { client_factory };
+        let router_state = RouterState { client_source };
 
         let mut headers = HeaderMap::new();
         // headers.insert("Authorization", "foobarbaz".parse().unwrap());

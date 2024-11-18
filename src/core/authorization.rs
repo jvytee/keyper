@@ -1,7 +1,7 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::core::data::ClientFactory;
+use crate::core::data::ClientSource;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -45,9 +45,9 @@ pub enum AuthorizationError {
     TemporarilyUnavailable,
 }
 
-pub async fn authorization_code<C: ClientFactory>(
+pub async fn authorization_code<C: ClientSource>(
     auth_request: AuthorizationRequest,
-    client_factory: &C,
+    client_source: &C,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
     if auth_request.response_type != ResponseType::Code {
         let auth_err_response = AuthorizationErrorResponse {
@@ -60,7 +60,7 @@ pub async fn authorization_code<C: ClientFactory>(
         return Err(auth_err_response);
     }
 
-    let Some(_client) = client_factory.from_id(&auth_request.client_id) else {
+    let Some(_client) = client_source.by_id(&auth_request.client_id) else {
         let auth_err_response = AuthorizationErrorResponse {
             error: AuthorizationError::UnauthorizedClient,
             error_description: None,
@@ -93,18 +93,19 @@ mod tests {
         authorization::{
             authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
         },
-        data::{Client, ClientFactory},
+        data::{Client, ClientSource},
     };
 
-    struct TestClientFactory {
+    struct TestClientSource {
         client_ids: Vec<String>,
     }
 
-    impl ClientFactory for TestClientFactory {
-        fn from_id(&self, id: &str) -> Option<Client> {
+    impl ClientSource for TestClientSource {
+        fn by_id(&self, id: &str) -> Option<Client> {
             if self.client_ids.contains(&id.to_string()) {
                 Some(Client {
                     id: id.to_string(),
+                    name: "Example Client".to_string(),
                     scopes: vec!["foo".to_string(), "bar".to_string()],
                 })
             } else {
@@ -123,11 +124,11 @@ mod tests {
             scope: None,
         };
 
-        let client_factory = TestClientFactory {
+        let client_source = TestClientSource {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_factory)
+        let response = authorization_code(request.clone(), &client_source)
             .await
             .unwrap();
 
@@ -145,11 +146,11 @@ mod tests {
             scope: None,
         };
 
-        let client_factory = TestClientFactory {
+        let client_source = TestClientSource {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_factory)
+        let response = authorization_code(request.clone(), &client_source)
             .await
             .unwrap_err();
 
