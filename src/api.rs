@@ -1,15 +1,13 @@
 pub mod authorization;
+pub mod token;
 
 use authorization::authorization_endpoint;
-use axum::extract::State;
-use axum::response::Response;
-use axum::{extract::Query, response::IntoResponse, routing::get, Router};
+use axum::{routing::get, Router};
 use std::io;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use crate::client::TestClientFactory;
-use crate::token::{AccessTokenErrorResponse, AccessTokenRequest, AccessTokenResponse};
 
 #[derive(Debug)]
 pub struct RouterState {
@@ -35,37 +33,10 @@ async fn index() -> String {
     "Hello, world!".to_string()
 }
 
-fn token_endpoint(
-    State(router_state): State<Arc<RouterState>>,
-    Query(access_token_request): Query<AccessTokenRequest>,
-) -> Result<AccessTokenResponse, AccessTokenErrorResponse> {
-    todo!()
-}
-
-impl IntoResponse for AccessTokenResponse {
-    fn into_response(self) -> Response {
-        todo!()
-    }
-}
-
-impl IntoResponse for AccessTokenErrorResponse {
-    fn into_response(self) -> Response {
-        todo!()
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use axum::{
-        extract::{Query, State},
-        http::{HeaderMap, HeaderValue, StatusCode},
-    };
-
     use crate::{
-        api::{authorization_endpoint, create_router, index, RouterState},
-        authorization::{AuthorizationRequest, ResponseType},
+        api::{create_router, index, RouterState},
         client::TestClientFactory,
     };
 
@@ -76,6 +47,7 @@ mod tests {
         };
         let router_state = RouterState { client_factory };
         let router = create_router(router_state);
+
         assert!(router.has_routes());
     }
 
