@@ -4,6 +4,7 @@ pub trait ClientFactory {
 
 pub struct Client {
     pub id: String,
+    pub scopes: Vec<String>
 }
 
 pub trait UserFactory {

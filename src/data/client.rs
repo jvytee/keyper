@@ -8,7 +8,10 @@ pub struct TestClientFactory {
 impl ClientFactory for TestClientFactory {
     fn from_id(&self, id: &str) -> Option<Client> {
         if self.client_ids.contains(&id.to_string()) {
-            Some(Client { id: id.to_string() })
+            Some(Client {
+                id: id.to_string(),
+                scopes: vec!["foo".to_string(), "bar".to_string()],
+            })
         } else {
             None
         }
