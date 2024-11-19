@@ -1,4 +1,4 @@
-use crate::core::data::{Client, ClientSource};
+use crate::core::data::{Client, ClientSource, ClientType};
 
 #[derive(Clone, Debug)]
 pub struct TestClientSource {
@@ -6,12 +6,13 @@ pub struct TestClientSource {
 }
 
 impl ClientSource for TestClientSource {
-    fn by_id(&self, id: &str) -> Option<Client> {
+    fn get_client(&self, id: &str) -> Option<Client> {
         if self.client_ids.contains(&id.to_string()) {
             Some(Client {
                 id: id.to_string(),
+                client_type: ClientType::Public,
+                redirection_uris: Vec::new(),
                 name: "Example Client".to_string(),
-                scopes: vec!["foo".to_string(), "bar".to_string()],
             })
         } else {
             None
