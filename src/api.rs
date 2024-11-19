@@ -8,11 +8,11 @@ use std::io;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
-use crate::data::client::TestClientSource;
+use crate::data::client::TestClientStore;
 
 #[derive(Debug)]
 pub struct RouterState {
-    pub client_source: TestClientSource,
+    pub client_store: TestClientStore,
 }
 
 pub fn create_router(state: RouterState) -> Router {
@@ -38,15 +38,15 @@ async fn index() -> String {
 mod tests {
     use crate::{
         api::{create_router, index, RouterState},
-        data::client::TestClientSource,
+        data::client::TestClientStore,
     };
 
     #[test]
     fn test_create_router() {
-        let client_source = TestClientSource {
+        let client_store = TestClientStore {
             client_ids: vec!["foobar".to_string()],
         };
-        let router_state = RouterState { client_source };
+        let router_state = RouterState { client_store };
         let router = create_router(router_state);
 
         assert!(router.has_routes());

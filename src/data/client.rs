@@ -1,11 +1,11 @@
-use crate::core::data::{Client, ClientSource, ClientType};
+use crate::core::data::{Client, ClientStore, ClientType};
 
 #[derive(Clone, Debug)]
-pub struct TestClientSource {
+pub struct TestClientStore {
     pub client_ids: Vec<String>,
 }
 
-impl ClientSource for TestClientSource {
+impl ClientStore for TestClientStore {
     fn get_client(&self, id: &str) -> Option<Client> {
         if self.client_ids.contains(&id.to_string()) {
             Some(Client {

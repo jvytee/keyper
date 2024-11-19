@@ -1,7 +1,7 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::core::data::ClientSource;
+use crate::core::data::ClientStore;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -45,9 +45,9 @@ pub enum AuthorizationError {
     TemporarilyUnavailable,
 }
 
-pub async fn authorization_code<C: ClientSource>(
+pub async fn authorization_code<C: ClientStore>(
     auth_request: AuthorizationRequest,
-    client_source: &C,
+    client_store: &C,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
     if auth_request.response_type != ResponseType::Code {
         let auth_err_response = AuthorizationErrorResponse {
@@ -60,7 +60,7 @@ pub async fn authorization_code<C: ClientSource>(
         return Err(auth_err_response);
     }
 
-    let Some(_client) = client_source.get_client(&auth_request.client_id) else {
+    let Some(_client) = client_store.get_client(&auth_request.client_id) else {
         let auth_err_response = AuthorizationErrorResponse {
             error: AuthorizationError::UnauthorizedClient,
             error_description: None,
@@ -93,14 +93,14 @@ mod tests {
         authorization::{
             authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
         },
-        data::{Client, ClientSource, ClientType},
+        data::{Client, ClientStore, ClientType},
     };
 
-    struct TestClientSource {
+    struct TestClientStore {
         client_ids: Vec<String>,
     }
 
-    impl ClientSource for TestClientSource {
+    impl ClientStore for TestClientStore {
         fn get_client(&self, id: &str) -> Option<Client> {
             if self.client_ids.contains(&id.to_string()) {
                 Some(Client {
@@ -125,11 +125,11 @@ mod tests {
             scope: None,
         };
 
-        let client_source = TestClientSource {
+        let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_source)
+        let response = authorization_code(request.clone(), &client_store)
             .await
             .unwrap();
 
@@ -147,11 +147,11 @@ mod tests {
             scope: None,
         };
 
-        let client_source = TestClientSource {
+        let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_source)
+        let response = authorization_code(request.clone(), &client_store)
             .await
             .unwrap_err();
 

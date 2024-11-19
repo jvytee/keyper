@@ -3,7 +3,7 @@ use std::error::Error;
 use chrono::Utc;
 use serde::Deserialize;
 
-pub trait ClientSource {
+pub trait ClientStore {
     fn get_client(&self, id: &str) -> Option<Client>;
 }
 
@@ -22,7 +22,7 @@ pub enum ClientType {
     Public,
 }
 
-pub trait OwnerSource {
+pub trait OwnerStore {
     fn get_owner(&self, name: &str) -> Option<Owner>;
 }
 
