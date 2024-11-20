@@ -11,7 +11,7 @@ pub trait ClientStore {
 pub struct Client {
     pub id: String,
     pub client_type: ClientType,
-    pub redirection_uris: Vec<String>,
+    pub redirect_uris: Vec<String>,
     pub name: String,
 }
 

@@ -50,33 +50,49 @@ pub async fn authorization_code<C: ClientStore>(
     client_store: &C,
 ) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
     if auth_request.response_type != ResponseType::Code {
-        let auth_err_response = AuthorizationErrorResponse {
+        return Err(AuthorizationErrorResponse {
             error: AuthorizationError::UnsupportedResponseType,
             error_description: None,
             error_uri: None,
             state: auth_request.state,
-        };
-
-        return Err(auth_err_response);
+        });
     }
 
-    let Some(_client) = client_store.read_client(&auth_request.client_id) else {
-        let auth_err_response = AuthorizationErrorResponse {
+    let Some(client) = client_store.read_client(&auth_request.client_id) else {
+        return Err(AuthorizationErrorResponse {
             error: AuthorizationError::UnauthorizedClient,
             error_description: None,
             error_uri: None,
             state: auth_request.state,
-        };
-
-        return Err(auth_err_response);
+        });
     };
 
-    let auth_response = AuthorizationResponse {
+    let redirect_uri = match (auth_request.redirect_uri, &client.redirect_uris.as_slice()) {
+        (None, &[]) => Err(AuthorizationError::InvalidRequest),
+        (None, &[redirect_uri, ..]) => Ok(redirect_uri.to_string()),
+        (Some(redirect_uri), &[]) => Ok(redirect_uri),
+        (Some(redirect_uri), redirect_uris) => {
+            if redirect_uris.contains(&redirect_uri) {
+                Ok(redirect_uri)
+            } else {
+                Err(AuthorizationError::InvalidRequest)
+            }
+        }
+    };
+
+    if let Err(error) = redirect_uri {
+        return Err(AuthorizationErrorResponse {
+            error,
+            error_description: None,
+            error_uri: None,
+            state: auth_request.state,
+        });
+    }
+
+    Ok(AuthorizationResponse {
         code: generate_authorization_code(),
         state: auth_request.state,
-    };
-
-    Ok(auth_response)
+    })
 }
 
 fn generate_authorization_code() -> String {
@@ -106,7 +122,7 @@ mod tests {
                 Some(Client {
                     id: id.to_string(),
                     client_type: ClientType::Public,
-                    redirection_uris: Vec::new(),
+                    redirect_uris: Vec::new(),
                     name: "Example Client".to_string(),
                 })
             } else {

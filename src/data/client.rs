@@ -11,7 +11,7 @@ impl ClientStore for TestClientStore {
             Some(Client {
                 id: id.to_string(),
                 client_type: ClientType::Public,
-                redirection_uris: Vec::new(),
+                redirect_uris: Vec::new(),
                 name: "Example Client".to_string(),
             })
         } else {
