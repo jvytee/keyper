@@ -60,7 +60,7 @@ pub async fn authorization_code<C: ClientStore>(
         return Err(auth_err_response);
     }
 
-    let Some(_client) = client_store.get_client(&auth_request.client_id) else {
+    let Some(_client) = client_store.read_client(&auth_request.client_id) else {
         let auth_err_response = AuthorizationErrorResponse {
             error: AuthorizationError::UnauthorizedClient,
             error_description: None,
@@ -101,7 +101,7 @@ mod tests {
     }
 
     impl ClientStore for TestClientStore {
-        fn get_client(&self, id: &str) -> Option<Client> {
+        fn read_client(&self, id: &str) -> Option<Client> {
             if self.client_ids.contains(&id.to_string()) {
                 Some(Client {
                     id: id.to_string(),

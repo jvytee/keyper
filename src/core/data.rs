@@ -4,7 +4,7 @@ use chrono::Utc;
 use serde::Deserialize;
 
 pub trait ClientStore {
-    fn get_client(&self, id: &str) -> Option<Client>;
+    fn read_client(&self, id: &str) -> Option<Client>;
 }
 
 #[derive(Deserialize, Debug)]
@@ -23,23 +23,26 @@ pub enum ClientType {
 }
 
 pub trait OwnerStore {
-    fn get_owner(&self, name: &str) -> Option<Owner>;
+    fn read_owner(&self, name: &str) -> Option<Owner>;
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Owner {
-    pub id: i32,
+    pub email: String,
     pub name: String,
     pub hash: String,
 }
 
-pub trait TokenStore {
-    fn get_token(&self, value: &str) -> Option<Token>;
-    fn set_token<E: Error>(&self, token: &Token) -> Result<(), E>;
+pub trait AuthorizationStore {
+    fn create_authorization<E: Error>(&self, authorization: &Authorization) -> Result<(), E>;
+    fn read_authorization(&self, token: &str) -> Option<Authorization>;
 }
 
-pub struct Token {
-    value: String,
+pub struct Authorization {
+    access_token: String,
+    scopes: Vec<String>,
+    owner_id: i32,
     created: chrono::DateTime<Utc>,
     expires: chrono::DateTime<Utc>,
+    refresh_token: Option<String>,
 }

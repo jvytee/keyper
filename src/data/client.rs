@@ -6,7 +6,7 @@ pub struct TestClientStore {
 }
 
 impl ClientStore for TestClientStore {
-    fn get_client(&self, id: &str) -> Option<Client> {
+    fn read_client(&self, id: &str) -> Option<Client> {
         if self.client_ids.contains(&id.to_string()) {
             Some(Client {
                 id: id.to_string(),
