@@ -28,7 +28,7 @@ pub fn parse_args(args: &[String]) -> Result<Params> {
 
 pub fn create_help(program: &str) -> String {
     let opts = create_options();
-    let brief = format!("Usage: {program} [options]");
+    let brief = format!("Usage: {program} [OPTIONS]");
     opts.usage(&brief)
 }
 

@@ -1,3 +1,3 @@
 pub mod authorization;
-pub mod data;
+pub mod model;
 pub mod token;

@@ -1,7 +1,7 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::core::data::ClientStore;
+use crate::core::model::ClientStore;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
@@ -93,7 +93,7 @@ mod tests {
         authorization::{
             authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
         },
-        data::{Client, ClientStore, ClientType},
+        model::{Client, ClientStore, ClientType},
     };
 
     struct TestClientStore {
