@@ -1,8 +1,6 @@
 use rand::{distributions, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::core::model::ClientStore;
-
 #[derive(Deserialize, Clone, Debug)]
 pub struct AuthorizationRequest {
     pub response_type: ResponseType,
@@ -43,6 +41,25 @@ pub enum AuthorizationError {
     InvalidScope,
     ServerError,
     TemporarilyUnavailable,
+}
+
+pub trait ClientStore {
+    fn read_client(&self, id: &str) -> Option<Client>;
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Client {
+    pub id: String,
+    pub client_type: ClientType,
+    pub redirect_uris: Vec<String>,
+    pub name: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum ClientType {
+    Confidential,
+    Public,
 }
 
 pub async fn authorization_code<C: ClientStore>(
@@ -105,12 +122,9 @@ fn generate_authorization_code() -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{
-        authorization::{
-            authorization_code, AuthorizationError, AuthorizationRequest, ResponseType,
-        },
-        model::{Client, ClientStore, ClientType},
-    };
+    use crate::core::authorization::{
+            authorization_code, AuthorizationError, AuthorizationRequest, Client, ClientStore, ClientType, ResponseType
+        };
 
     struct TestClientStore {
         client_ids: Vec<String>,

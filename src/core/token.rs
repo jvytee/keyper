@@ -1,3 +1,6 @@
+use std::error::Error;
+
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
@@ -45,6 +48,32 @@ pub enum AccessTokenError {
     UnauthorizedClient,
     UnsupportedGrantType,
     InvalidScope,
+}
+
+pub trait OwnerStore {
+    fn read_owner(&self, name: &str) -> Option<Owner>;
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Owner {
+    pub email: String,
+    pub name: String,
+    pub hash: String,
+}
+
+pub trait AuthorizationStore {
+    fn create_authorization<E: Error>(&self, authorization: &Authorization) -> Result<(), E>;
+    fn read_authorization(&self, token: &str) -> Option<Authorization>;
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Authorization {
+    access_token: String,
+    scopes: Vec<String>,
+    owner_id: i32,
+    created: DateTime<Utc>,
+    expires: DateTime<Utc>,
+    refresh_token: Option<String>,
 }
 
 pub async fn access_token(

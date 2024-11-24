@@ -1,4 +1,4 @@
-use crate::core::model::{Client, ClientStore, ClientType};
+use crate::core::authorization::{Client, ClientStore, ClientType};
 
 #[derive(Clone, Debug)]
 pub struct TestClientStore {
