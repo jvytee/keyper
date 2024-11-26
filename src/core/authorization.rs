@@ -123,8 +123,9 @@ fn generate_authorization_code() -> String {
 #[cfg(test)]
 mod tests {
     use crate::core::authorization::{
-            authorization_code, AuthorizationError, AuthorizationRequest, Client, ClientStore, ClientType, ResponseType
-        };
+        authorization_code, AuthorizationError, AuthorizationRequest, Client, ClientStore,
+        ClientType, ResponseType,
+    };
 
     struct TestClientStore {
         client_ids: Vec<String>,
@@ -159,9 +160,10 @@ mod tests {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_store)
-            .await
-            .unwrap();
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_ok());
+        let response = response.unwrap();
 
         assert_eq!(response.code.len(), 24);
         assert_eq!(response.state, request.state);
@@ -181,11 +183,35 @@ mod tests {
             client_ids: vec!["s6BhdRkqt3".to_string()],
         };
 
-        let response = authorization_code(request.clone(), &client_store)
-            .await
-            .unwrap_err();
+        let response = authorization_code(request.clone(), &client_store).await;
 
-        assert_eq!(response.state, request.state);
+        assert!(response.is_err());
+        let response = response.unwrap_err();
+
         assert_eq!(response.error, AuthorizationError::UnsupportedResponseType);
+        assert_eq!(response.state, request.state);
+    }
+
+    #[tokio::test]
+    async fn test_authorization_code_unauthorized_client() {
+        let request = AuthorizationRequest {
+            response_type: ResponseType::Code,
+            client_id: "wrong".to_string(),
+            redirect_uri: Some("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()),
+            scope: None,
+            state: Some("xyz".to_string()),
+        };
+
+        let client_store = TestClientStore {
+            client_ids: vec!["s6BhdRkqt3".to_string()],
+        };
+
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_err());
+        let response = response.unwrap_err();
+
+        assert_eq!(response.error, AuthorizationError::UnauthorizedClient);
+        assert_eq!(response.state, request.state);
     }
 }
