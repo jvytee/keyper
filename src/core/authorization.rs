@@ -136,20 +136,15 @@ mod tests {
 
     impl ClientStore for TestClientStore {
         fn read_client(&self, id: &str) -> Option<Client> {
-            if let Some(index) = self
-                .client_ids
+            self.client_ids
                 .iter()
-                .position(|elem| *elem == id.to_string())
-            {
-                Some(Client {
+                .position(|elem| elem == id)
+                .map(|index| Client {
                     id: self.client_ids[index].clone(),
                     client_type: ClientType::Public,
                     redirect_uris: self.redirect_uris[index].clone(),
                     name: "Example Client".to_string(),
                 })
-            } else {
-                None
-            }
         }
     }
 
@@ -269,7 +264,10 @@ mod tests {
         assert!(response.is_ok());
         let (response, redirect_uri) = response.unwrap();
 
-        assert_eq!(redirect_uri, "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string());
+        assert_eq!(
+            redirect_uri,
+            "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()
+        );
         assert_eq!(response.state, request.state);
     }
 
@@ -293,7 +291,10 @@ mod tests {
         assert!(response.is_ok());
         let (response, redirect_uri) = response.unwrap();
 
-        assert_eq!(redirect_uri, "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string());
+        assert_eq!(
+            redirect_uri,
+            "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()
+        );
         assert_eq!(response.state, request.state);
     }
 
