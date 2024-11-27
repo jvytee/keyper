@@ -4,8 +4,8 @@ mod core;
 mod data;
 
 use anyhow::Result;
-use data::client::TestClientStore;
 use api::RouterState;
+use data::client::TestClientStore;
 use std::{env, process::ExitCode};
 use tracing::info;
 
@@ -29,7 +29,7 @@ async fn run() -> Result<()> {
     info!("Parsing command line arguments");
     let args: Vec<String> = env::args().collect();
     let params = cli::parse_args(&args)?;
-    
+
     if let Some(help) = params.help {
         println!("{help}");
         return Ok(());
@@ -41,7 +41,9 @@ async fn run() -> Result<()> {
     };
 
     info!("Creating router");
-    let router_state = RouterState { client_store: client_factory };
+    let router_state = RouterState {
+        client_store: client_factory,
+    };
     let router = api::create_router(router_state);
 
     info!("Listening for requests on port {}", params.port);
