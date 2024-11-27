@@ -65,7 +65,7 @@ pub enum ClientType {
 pub async fn authorization_code<C: ClientStore>(
     auth_request: AuthorizationRequest,
     client_store: &C,
-) -> Result<AuthorizationResponse, AuthorizationErrorResponse> {
+) -> Result<(AuthorizationResponse, String), AuthorizationErrorResponse> {
     if auth_request.response_type != ResponseType::Code {
         return Err(AuthorizationErrorResponse {
             error: AuthorizationError::UnsupportedResponseType,
@@ -97,19 +97,21 @@ pub async fn authorization_code<C: ClientStore>(
         }
     };
 
-    if let Err(error) = redirect_uri {
-        return Err(AuthorizationErrorResponse {
+    match redirect_uri {
+        Err(error) => Err(AuthorizationErrorResponse {
             error,
             error_description: None,
             error_uri: None,
             state: auth_request.state,
-        });
+        }),
+        Ok(redirect_uri) => Ok((
+            AuthorizationResponse {
+                code: generate_authorization_code(),
+                state: auth_request.state,
+            },
+            redirect_uri,
+        )),
     }
-
-    Ok(AuthorizationResponse {
-        code: generate_authorization_code(),
-        state: auth_request.state,
-    })
 }
 
 fn generate_authorization_code() -> String {
@@ -129,15 +131,20 @@ mod tests {
 
     struct TestClientStore {
         client_ids: Vec<String>,
+        redirect_uris: Vec<Vec<String>>,
     }
 
     impl ClientStore for TestClientStore {
         fn read_client(&self, id: &str) -> Option<Client> {
-            if self.client_ids.contains(&id.to_string()) {
+            if let Some(index) = self
+                .client_ids
+                .iter()
+                .position(|elem| *elem == id.to_string())
+            {
                 Some(Client {
-                    id: id.to_string(),
+                    id: self.client_ids[index].clone(),
                     client_type: ClientType::Public,
-                    redirect_uris: Vec::new(),
+                    redirect_uris: self.redirect_uris[index].clone(),
                     name: "Example Client".to_string(),
                 })
             } else {
@@ -158,12 +165,13 @@ mod tests {
 
         let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
 
         let response = authorization_code(request.clone(), &client_store).await;
 
         assert!(response.is_ok());
-        let response = response.unwrap();
+        let (response, redirect_uri) = response.unwrap();
 
         assert_eq!(response.code.len(), 24);
         assert_eq!(response.state, request.state);
@@ -181,6 +189,7 @@ mod tests {
 
         let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
 
         let response = authorization_code(request.clone(), &client_store).await;
@@ -204,6 +213,7 @@ mod tests {
 
         let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
 
         let response = authorization_code(request.clone(), &client_store).await;
@@ -227,6 +237,79 @@ mod tests {
 
         let client_store = TestClientStore {
             client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![Vec::new()],
+        };
+
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_err());
+        let response = response.unwrap_err();
+
+        assert_eq!(response.error, AuthorizationError::InvalidRequest);
+        assert_eq!(response.state, request.state);
+    }
+
+    #[tokio::test]
+    async fn test_authorization_code_hard_redirect_url() {
+        let request = AuthorizationRequest {
+            response_type: ResponseType::Code,
+            client_id: "s6BhdRkqt3".to_string(),
+            redirect_uri: None,
+            scope: None,
+            state: Some("xyz".to_string()),
+        };
+
+        let client_store = TestClientStore {
+            client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
+        };
+
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_ok());
+        let (response, redirect_uri) = response.unwrap();
+
+        assert_eq!(redirect_uri, "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string());
+        assert_eq!(response.state, request.state);
+    }
+
+    #[tokio::test]
+    async fn test_authorization_code_dyn_redirect_url() {
+        let request = AuthorizationRequest {
+            response_type: ResponseType::Code,
+            client_id: "s6BhdRkqt3".to_string(),
+            redirect_uri: Some("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()),
+            scope: None,
+            state: Some("xyz".to_string()),
+        };
+
+        let client_store = TestClientStore {
+            client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
+        };
+
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_ok());
+        let (response, redirect_uri) = response.unwrap();
+
+        assert_eq!(redirect_uri, "https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string());
+        assert_eq!(response.state, request.state);
+    }
+
+    #[tokio::test]
+    async fn test_authorization_code_invalid_redirect_url() {
+        let request = AuthorizationRequest {
+            response_type: ResponseType::Code,
+            client_id: "s6BhdRkqt3".to_string(),
+            redirect_uri: Some("https%3A%2F%2Fclient%2Eexample%2Ecom".to_string()),
+            scope: None,
+            state: Some("xyz".to_string()),
+        };
+
+        let client_store = TestClientStore {
+            client_ids: vec!["s6BhdRkqt3".to_string()],
+            redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
 
         let response = authorization_code(request.clone(), &client_store).await;
