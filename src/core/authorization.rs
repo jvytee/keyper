@@ -214,4 +214,27 @@ mod tests {
         assert_eq!(response.error, AuthorizationError::UnauthorizedClient);
         assert_eq!(response.state, request.state);
     }
+
+    #[tokio::test]
+    async fn test_authorization_code_no_redirect_url() {
+        let request = AuthorizationRequest {
+            response_type: ResponseType::Code,
+            client_id: "s6BhdRkqt3".to_string(),
+            redirect_uri: None,
+            scope: None,
+            state: Some("xyz".to_string()),
+        };
+
+        let client_store = TestClientStore {
+            client_ids: vec!["s6BhdRkqt3".to_string()],
+        };
+
+        let response = authorization_code(request.clone(), &client_store).await;
+
+        assert!(response.is_err());
+        let response = response.unwrap_err();
+
+        assert_eq!(response.error, AuthorizationError::InvalidRequest);
+        assert_eq!(response.state, request.state);
+    }
 }
