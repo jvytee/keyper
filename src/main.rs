@@ -7,7 +7,7 @@ use anyhow::Result;
 use api::RouterState;
 use data::client::TestClientStore;
 use std::{env, process::ExitCode};
-use tracing::info;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -15,11 +15,11 @@ async fn main() -> ExitCode {
 
     match run().await {
         Ok(()) => {
-            tracing::info!("Done.");
+            info!("Done.");
             ExitCode::SUCCESS
         }
         Err(error) => {
-            tracing::error!("Error: {}", error);
+            error!("Error: {}", error);
             ExitCode::FAILURE
         }
     }
