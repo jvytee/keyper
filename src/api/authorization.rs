@@ -9,6 +9,7 @@ use axum::{
 
 use crate::core::authorization::{
     self, AuthorizationErrorResponse, AuthorizationRequest, AuthorizationResponse,
+    AuthorizationSuccessResponse,
 };
 
 use super::RouterState;
@@ -28,8 +29,10 @@ pub async fn authorization_endpoint(
     }
 
     match authorization::authorization_code(auth_request, &router_state.client_store).await {
-        Ok((auth_response, _redirect_uri)) => auth_response.into_response(),
-        Err(auth_error_response) => auth_error_response.into_response()
+        Ok(AuthorizationSuccessResponse(auth_response, _redirect_uri)) => {
+            auth_response.into_response()
+        }
+        Err(auth_error_response) => auth_error_response.into_response(),
     }
 }
 

@@ -43,6 +43,9 @@ pub enum AuthorizationError {
     TemporarilyUnavailable,
 }
 
+#[derive(Debug)]
+pub struct AuthorizationSuccessResponse(pub AuthorizationResponse, pub String);
+
 pub trait ClientStore {
     fn read_client(&self, id: &str) -> Option<Client>;
 }
@@ -65,7 +68,7 @@ pub enum ClientType {
 pub async fn authorization_code<C: ClientStore>(
     auth_request: AuthorizationRequest,
     client_store: &C,
-) -> Result<(AuthorizationResponse, String), AuthorizationErrorResponse> {
+) -> Result<AuthorizationSuccessResponse, AuthorizationErrorResponse> {
     if auth_request.response_type != ResponseType::Code {
         return Err(AuthorizationErrorResponse {
             error: AuthorizationError::UnsupportedResponseType,
@@ -104,7 +107,7 @@ pub async fn authorization_code<C: ClientStore>(
             error_uri: None,
             state: auth_request.state,
         }),
-        Ok(redirect_uri) => Ok((
+        Ok(redirect_uri) => Ok(AuthorizationSuccessResponse(
             AuthorizationResponse {
                 code: generate_authorization_code(),
                 state: auth_request.state,
@@ -125,9 +128,11 @@ fn generate_authorization_code() -> String {
 #[cfg(test)]
 mod tests {
     use crate::core::authorization::{
-        authorization_code, AuthorizationError, AuthorizationRequest, Client, ClientStore,
-        ClientType, ResponseType,
+        authorization_code, AuthorizationError, AuthorizationRequest, AuthorizationSuccessResponse,
+        Client, ClientStore, ClientType, ResponseType,
     };
+
+    use super::generate_authorization_code;
 
     struct TestClientStore {
         client_ids: Vec<String>,
@@ -166,7 +171,7 @@ mod tests {
         let response = authorization_code(request.clone(), &client_store).await;
 
         assert!(response.is_ok());
-        let (response, redirect_uri) = response.unwrap();
+        let AuthorizationSuccessResponse(response, redirect_uri) = response.unwrap();
 
         assert_eq!(response.code.len(), 24);
         assert_eq!(response.state, request.state);
@@ -262,7 +267,7 @@ mod tests {
         let response = authorization_code(request.clone(), &client_store).await;
 
         assert!(response.is_ok());
-        let (response, redirect_uri) = response.unwrap();
+        let AuthorizationSuccessResponse(response, redirect_uri) = response.unwrap();
 
         assert_eq!(
             redirect_uri,
@@ -289,7 +294,7 @@ mod tests {
         let response = authorization_code(request.clone(), &client_store).await;
 
         assert!(response.is_ok());
-        let (response, redirect_uri) = response.unwrap();
+        let AuthorizationSuccessResponse(response, redirect_uri) = response.unwrap();
 
         assert_eq!(
             redirect_uri,
@@ -320,5 +325,11 @@ mod tests {
 
         assert_eq!(response.error, AuthorizationError::InvalidRequest);
         assert_eq!(response.state, request.state);
+    }
+
+    #[test]
+    fn test_generate_authorization_code() {
+        let auth_code = generate_authorization_code();
+        assert_eq!(auth_code.len(), 24);
     }
 }
