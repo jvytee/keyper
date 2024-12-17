@@ -58,7 +58,7 @@ pub struct Client {
     pub name: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum ClientType {
     Confidential,
