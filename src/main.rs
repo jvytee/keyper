@@ -40,9 +40,13 @@ async fn run() -> Result<()> {
         client_ids: vec!["foobar".to_string()],
     };
 
+    info!("Creating template engine");
+    let tera = api::create_tera();
+
     info!("Creating router");
     let router_state = RouterState {
         client_store: client_factory,
+        tera: tera,
     };
     let router = api::create_router(router_state);
 

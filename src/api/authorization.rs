@@ -27,7 +27,6 @@ pub async fn authorization_endpoint(
         )
             .into_response();
     }
-
     match authorization::authorization_code(auth_request, &router_state.client_store).await {
         Ok(AuthorizationSuccessResponse(auth_response, _redirect_uri)) => {
             auth_response.into_response()
@@ -69,7 +68,7 @@ mod tests {
     };
 
     use crate::{
-        api::{authorization::authorization_endpoint, RouterState},
+        api::{self, authorization::authorization_endpoint, RouterState},
         core::authorization::{AuthorizationRequest, ResponseType},
         data::client::TestClientStore,
     };
@@ -87,7 +86,8 @@ mod tests {
         let client_store = TestClientStore {
             client_ids: vec!["foobar".to_string()],
         };
-        let router_state = RouterState { client_store };
+        let tera = api::create_tera();
+        let router_state = RouterState { client_store, tera };
 
         let mut headers = HeaderMap::new();
         // headers.insert("Authorization", "foobarbaz".parse().unwrap());
