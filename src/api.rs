@@ -14,7 +14,7 @@ use crate::data::client::TestClientStore;
 #[derive(Debug)]
 pub struct RouterState {
     pub client_store: TestClientStore,
-    pub tera: Tera,
+    pub template_engine: Tera,
 }
 
 pub fn create_router(state: RouterState) -> Router {
@@ -25,7 +25,7 @@ pub fn create_router(state: RouterState) -> Router {
         .with_state(Arc::new(state))
 }
 
-pub fn create_tera() -> Tera {
+pub fn create_template_engine() -> tera::Result<Tera> {
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![
         ("base", include_str!("../templates/base.html")),
@@ -33,9 +33,9 @@ pub fn create_tera() -> Tera {
             "authenticate",
             include_str!("../templates/authenticate.html"),
         ),
-    ]);
+    ])?;
 
-    tera
+    Ok(tera)
 }
 
 pub async fn serve(router: Router, port: u16) -> io::Result<()> {
@@ -51,10 +51,8 @@ async fn index() -> String {
 
 #[cfg(test)]
 mod tests {
-    use tera::Tera;
-
     use crate::{
-        api::{create_router, create_tera, index, RouterState},
+        api::{create_router, create_template_engine, index, RouterState},
         data::client::TestClientStore,
     };
 
@@ -63,8 +61,11 @@ mod tests {
         let client_store = TestClientStore {
             client_ids: vec!["foobar".to_string()],
         };
-        let tera = create_tera();
-        let router_state = RouterState { client_store, tera };
+        let template_engine = create_template_engine().expect("Could not create template engine");
+        let router_state = RouterState {
+            client_store,
+            template_engine,
+        };
         let router = create_router(router_state);
 
         assert!(router.has_routes());

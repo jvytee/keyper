@@ -27,6 +27,7 @@ pub async fn authorization_endpoint(
         )
             .into_response();
     }
+
     match authorization::authorization_code(auth_request, &router_state.client_store).await {
         Ok(AuthorizationSuccessResponse(auth_response, _redirect_uri)) => {
             auth_response.into_response()
@@ -86,8 +87,12 @@ mod tests {
         let client_store = TestClientStore {
             client_ids: vec!["foobar".to_string()],
         };
-        let tera = api::create_tera();
-        let router_state = RouterState { client_store, tera };
+        let template_engine =
+            api::create_template_engine().expect("Could not create template engine");
+        let router_state = RouterState {
+            client_store,
+            template_engine,
+        };
 
         let mut headers = HeaderMap::new();
         // headers.insert("Authorization", "foobarbaz".parse().unwrap());

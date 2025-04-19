@@ -41,12 +41,12 @@ async fn run() -> Result<()> {
     };
 
     info!("Creating template engine");
-    let tera = api::create_tera();
+    let template_engine = api::create_template_engine()?;
 
     info!("Creating router");
     let router_state = RouterState {
         client_store: client_factory,
-        tera: tera,
+        template_engine,
     };
     let router = api::create_router(router_state);
 
