@@ -71,7 +71,7 @@ mod tests {
     use crate::{
         api::{self, authorization::authorization_endpoint, RouterState},
         core::authorization::{AuthorizationRequest, ResponseType},
-        data::client::TestClientStore,
+        data::client::TestClientRepository,
     };
 
     #[tokio::test]
@@ -84,7 +84,7 @@ mod tests {
             scope: None,
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["foobar".to_string()],
         };
         let template_engine =

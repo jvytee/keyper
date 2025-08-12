@@ -50,7 +50,7 @@ pub enum AccessTokenError {
     InvalidScope,
 }
 
-pub trait OwnerStore {
+pub trait OwnerRepository {
     fn read_owner(&self, name: &str) -> Option<Owner>;
 }
 
@@ -61,7 +61,7 @@ pub struct Owner {
     pub hash: String,
 }
 
-pub trait AuthorizationStore {
+pub trait AuthorizationRepository {
     fn create_authorization<E: Error>(&self, authorization: &Authorization) -> Result<(), E>;
     fn read_authorization(&self, token: &str) -> Option<Authorization>;
 }

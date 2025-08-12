@@ -14,11 +14,11 @@ use tokio::net::TcpListener;
 
 use crate::api::assets::assets;
 use crate::api::authentication::{authentication_get_endpoint, authentication_post_endpoint};
-use crate::data::client::TestClientStore;
+use crate::data::client::TestClientRepository;
 
 #[derive(Debug)]
 pub struct RouterState {
-    pub client_store: TestClientStore,
+    pub client_store: TestClientRepository,
     pub template_engine: Tera,
 }
 
@@ -61,12 +61,12 @@ async fn index() -> String {
 mod tests {
     use crate::{
         api::{RouterState, create_router, create_template_engine, index},
-        data::client::TestClientStore,
+        data::client::TestClientRepository,
     };
 
     #[test]
     fn test_create_router() {
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["foobar".to_string()],
         };
         let template_engine = create_template_engine().expect("Could not create template engine");

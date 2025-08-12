@@ -2,21 +2,21 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::core::authorization::{Client, ClientStore, ClientType};
+use crate::core::authorization::{Client, ClientRepository, ClientType};
 
 #[derive(Clone, Debug)]
-pub struct MapClientStore {
+pub struct MapClientRepository {
     pub data: HashMap<String, ClientData>,
 }
 
-impl MapClientStore {
+impl MapClientRepository {
     pub fn try_from_toml(input: &str) -> Result<Self, toml::de::Error> {
         let data: HashMap<String, ClientData> = toml::from_str(input)?;
         Ok(Self { data })
     }
 }
 
-impl ClientStore for MapClientStore {
+impl ClientRepository for MapClientRepository {
     fn read_client(&self, id: &str) -> Option<Client> {
         self.data.get(id).map(|client_data| Client {
             id: id.to_string(),
@@ -35,11 +35,11 @@ pub struct ClientData {
 }
 
 #[derive(Clone, Debug)]
-pub struct TestClientStore {
+pub struct TestClientRepository {
     pub client_ids: Vec<String>,
 }
 
-impl ClientStore for TestClientStore {
+impl ClientRepository for TestClientRepository {
     fn read_client(&self, id: &str) -> Option<Client> {
         if self.client_ids.contains(&id.to_string()) {
             Some(Client {
@@ -56,9 +56,9 @@ impl ClientStore for TestClientStore {
 
 #[cfg(test)]
 mod test {
-    use crate::core::authorization::{ClientStore, ClientType};
+    use crate::core::authorization::{ClientRepository, ClientType};
 
-    use super::MapClientStore;
+    use super::MapClientRepository;
 
     #[test]
     fn test_try_from_toml() {
@@ -69,7 +69,7 @@ mod test {
             redirect_uris = ["https://example.com/auth_success"]
         "#;
 
-        let client_store = MapClientStore::try_from_toml(input).unwrap();
+        let client_store = MapClientRepository::try_from_toml(input).unwrap();
         assert_eq!(client_store.data.len(), 1);
 
         let test_client = client_store.read_client("abcd1234").unwrap();

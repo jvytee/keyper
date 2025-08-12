@@ -46,7 +46,7 @@ pub enum AuthorizationError {
 #[derive(Debug)]
 pub struct AuthorizationSuccessResponse(pub AuthorizationResponse, pub String);
 
-pub trait ClientStore {
+pub trait ClientRepository {
     fn read_client(&self, id: &str) -> Option<Client>;
 }
 
@@ -65,7 +65,7 @@ pub enum ClientType {
     Public,
 }
 
-pub async fn authorization_code<C: ClientStore>(
+pub async fn authorization_code<C: ClientRepository>(
     auth_request: AuthorizationRequest,
     client_store: &C,
 ) -> Result<AuthorizationSuccessResponse, AuthorizationErrorResponse> {
@@ -129,17 +129,17 @@ fn generate_authorization_code() -> String {
 mod tests {
     use crate::core::authorization::{
         authorization_code, AuthorizationError, AuthorizationRequest, AuthorizationSuccessResponse,
-        Client, ClientStore, ClientType, ResponseType,
+        Client, ClientRepository, ClientType, ResponseType,
     };
 
     use super::generate_authorization_code;
 
-    struct TestClientStore {
+    struct TestClientRepository {
         client_ids: Vec<String>,
         redirect_uris: Vec<Vec<String>>,
     }
 
-    impl ClientStore for TestClientStore {
+    impl ClientRepository for TestClientRepository {
         fn read_client(&self, id: &str) -> Option<Client> {
             self.client_ids
                 .iter()
@@ -163,7 +163,7 @@ mod tests {
             scope: None,
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
@@ -187,7 +187,7 @@ mod tests {
             scope: None,
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
@@ -211,7 +211,7 @@ mod tests {
             state: Some("xyz".to_string()),
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
@@ -235,7 +235,7 @@ mod tests {
             state: Some("xyz".to_string()),
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![Vec::new()],
         };
@@ -259,7 +259,7 @@ mod tests {
             state: Some("xyz".to_string()),
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
@@ -286,7 +286,7 @@ mod tests {
             state: Some("xyz".to_string()),
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };
@@ -313,7 +313,7 @@ mod tests {
             state: Some("xyz".to_string()),
         };
 
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["s6BhdRkqt3".to_string()],
             redirect_uris: vec![vec!["https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb".to_string()]],
         };

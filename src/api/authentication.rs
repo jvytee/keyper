@@ -34,12 +34,12 @@ mod tests {
 
     use crate::{
         api::{RouterState, authentication::authentication_get_endpoint, create_template_engine},
-        data::client::TestClientStore,
+        data::client::TestClientRepository,
     };
 
     #[tokio::test]
     async fn test_authentication_endpoint() {
-        let client_store = TestClientStore {
+        let client_store = TestClientRepository {
             client_ids: vec!["foobar".to_string()],
         };
         let template_engine = create_template_engine().expect("Could not create template engine");

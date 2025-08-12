@@ -5,7 +5,7 @@ mod data;
 
 use anyhow::Result;
 use api::RouterState;
-use data::client::TestClientStore;
+use data::client::TestClientRepository;
 use std::{env, process::ExitCode};
 use tracing::{error, info};
 
@@ -36,7 +36,7 @@ async fn run() -> Result<()> {
     }
 
     info!("Creating client factory");
-    let client_factory = TestClientStore {
+    let client_factory = TestClientRepository {
         client_ids: vec!["foobar".to_string()],
     };
 
