@@ -4,6 +4,7 @@ pub mod authorization;
 pub mod token;
 
 use authorization::authorization_endpoint;
+use axum::routing::post;
 use axum::{Router, routing::get};
 use std::io;
 use std::sync::Arc;
@@ -12,7 +13,7 @@ use token::token_endpoint;
 use tokio::net::TcpListener;
 
 use crate::api::assets::assets;
-use crate::api::authentication::authentication_endpoint;
+use crate::api::authentication::{authentication_get_endpoint, authentication_post_endpoint};
 use crate::data::client::TestClientStore;
 
 #[derive(Debug)]
@@ -25,7 +26,8 @@ pub fn create_router(state: RouterState) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/assets/:filename", get(assets))
-        .route("/authentication", get(authentication_endpoint))
+        .route("/authentication", get(authentication_get_endpoint))
+        .route("/authentication", post(authentication_post_endpoint))
         .route("/authorization", get(authorization_endpoint))
         .route("/token", get(token_endpoint))
         .with_state(Arc::new(state))
@@ -34,10 +36,10 @@ pub fn create_router(state: RouterState) -> Router {
 pub fn create_template_engine() -> tera::Result<Tera> {
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![
-        ("base", include_str!("../templates/base.html")),
+        ("base", include_str!("api/templates/base.html")),
         (
             "authenticate",
-            include_str!("../templates/authenticate.html"),
+            include_str!("api/templates/authenticate.html"),
         ),
     ])?;
 

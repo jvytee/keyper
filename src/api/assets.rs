@@ -11,7 +11,7 @@ pub async fn assets(Path(filename): Path<String>) -> Response {
         "pico.min.css".to_string(),
         (
             "text/css".to_string(),
-            include_str!("../../templates/pico.min.css").to_string(),
+            include_str!("templates/pico.min.css").to_string(),
         ),
     )]);
 
