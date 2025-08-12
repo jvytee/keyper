@@ -1,14 +1,18 @@
+pub mod assets;
+pub mod authentication;
 pub mod authorization;
 pub mod token;
 
 use authorization::authorization_endpoint;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use std::io;
 use std::sync::Arc;
 use tera::Tera;
 use token::token_endpoint;
 use tokio::net::TcpListener;
 
+use crate::api::assets::assets;
+use crate::api::authentication::authentication_endpoint;
 use crate::data::client::TestClientStore;
 
 #[derive(Debug)]
@@ -20,6 +24,8 @@ pub struct RouterState {
 pub fn create_router(state: RouterState) -> Router {
     Router::new()
         .route("/", get(index))
+        .route("/assets/:filename", get(assets))
+        .route("/authentication", get(authentication_endpoint))
         .route("/authorization", get(authorization_endpoint))
         .route("/token", get(token_endpoint))
         .with_state(Arc::new(state))
@@ -52,7 +58,7 @@ async fn index() -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        api::{create_router, create_template_engine, index, RouterState},
+        api::{RouterState, create_router, create_template_engine, index},
         data::client::TestClientStore,
     };
 
