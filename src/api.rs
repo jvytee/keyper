@@ -12,9 +12,9 @@ use tera::Tera;
 use token::token_endpoint;
 use tokio::net::TcpListener;
 
-use crate::api::assets::assets;
+use crate::api::assets::assets_endpoint;
 use crate::api::authentication::{authentication_get_endpoint, authentication_post_endpoint};
-use crate::data::client::TestClientRepository;
+use crate::repository::client::TestClientRepository;
 
 #[derive(Debug)]
 pub struct RouterState {
@@ -25,7 +25,7 @@ pub struct RouterState {
 pub fn create_router(state: RouterState) -> Router {
     Router::new()
         .route("/", get(index))
-        .route("/assets/:filename", get(assets))
+        .route("/assets/:filename", get(assets_endpoint))
         .route("/authentication", get(authentication_get_endpoint))
         .route("/authentication", post(authentication_post_endpoint))
         .route("/authorization", get(authorization_endpoint))
@@ -61,7 +61,7 @@ async fn index() -> String {
 mod tests {
     use crate::{
         api::{RouterState, create_router, create_template_engine, index},
-        data::client::TestClientRepository,
+        repository::client::TestClientRepository,
     };
 
     #[test]

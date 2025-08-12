@@ -1,11 +1,11 @@
 mod api;
 mod cli;
 mod core;
-mod repository;
+mod repositories;
 
 use anyhow::Result;
 use api::RouterState;
-use repository::client::TestClientRepository;
+use repositories::client::TestClientRepository;
 use std::{env, process::ExitCode};
 use tracing::{error, info};
 

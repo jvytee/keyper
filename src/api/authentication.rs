@@ -34,7 +34,7 @@ mod tests {
 
     use crate::{
         api::{RouterState, authentication::authentication_get_endpoint, create_template_engine},
-        data::client::TestClientRepository,
+        repository::client::TestClientRepository,
     };
 
     #[tokio::test]

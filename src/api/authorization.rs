@@ -71,7 +71,7 @@ mod tests {
     use crate::{
         api::{self, authorization::authorization_endpoint, RouterState},
         core::authorization::{AuthorizationRequest, ResponseType},
-        data::client::TestClientRepository,
+        repository::client::TestClientRepository,
     };
 
     #[tokio::test]
